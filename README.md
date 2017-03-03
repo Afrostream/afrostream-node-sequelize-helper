@@ -2,11 +2,14 @@
 
 Helper around sequelize ORM providing
  - directory model loader
- - easy associations definitions
+ - DSL model associations creator
+ - query builder with filters
 
 # Usage
 
-loader & definitions functions
+## Loader
+
+directory model loader
 
 ```js
 const Helper = require('afrostream-node-sequelize-helper')
@@ -14,8 +17,13 @@ const helper = new Helper(sequelize);
 
 // load a bunch of models
 helper.loadModelsFromDirectory('./models');
+```
+
+DSL model associations creator
+
+```js
 // define associations
-helper.associate(`
+helper.associateModels(`
   ModelA.foo->ModelB
   ModelB.bar1->ModelC
   ModelB.bar2->ModelA
@@ -24,7 +32,7 @@ helper.associate(`
 helper.models;
 ```
 
-query builder
+## Query builder
 
 ```js
 const queryOptionsBuilder = helper.createQueryOptionsBuilder();
@@ -89,6 +97,14 @@ const filterActive = helper.createFilterOR(
     ];
   }
 );
+```
+
+## CRUD Router
+
+```
+const Helper = require('afrostream-node-sequelize-helper')
+
+router.use('/elementFilms', Helper.routerCRUD({Model: sqldb.ElementFilm}));
 ```
 
 # low level api
