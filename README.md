@@ -16,7 +16,7 @@ const Helper = require('afrostream-node-sequelize-helper')
 const helper = new Helper(sequelize);
 
 // load a bunch of models
-helper.loadModelsFromDirectory('./models');
+helper.loadModelsFromDirectory(__dirname + '/models');
 ```
 
 DSL model associations creator
@@ -24,9 +24,19 @@ DSL model associations creator
 ```js
 // define associations
 helper.associateModels(`
-  ModelA.foo->ModelB
-  ModelB.bar1->ModelC
-  ModelB.bar2->ModelA
+  # LifePin.belongsTo(Image, {as: 'image', constraints: false})
+    LifePin         -> Image
+  # Post.belongsTo(Image, {as: 'poster', constraints: false});
+  Post.poster -> Image
+
+
+  # User.hasMany(LifePin, {as: 'lifePins', foreignKey: 'userId'});
+    User.lifePins[] -> LifePin
+
+  # LifePin.belongsToMany(LifeTheme, {through: LifeThemePins, as: 'themes', foreignKey: 'lifePinId'});
+  # LifeTheme.belongsToMany(LifePin, {through: LifeThemePins, as: 'pins', foreignKey: 'lifeThemeId'});
+  LifePin.themes[] -> LifeThemePins -> LifeTheme
+  LifeTheme.pins[] -> LifeThemePins -> LifePin
 `);
 // get models { ModelNameA: Model, ... }
 helper.models;

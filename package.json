@@ -1,0 +1,17 @@
+{
+  "name": "afrostream-node-sequelize-helper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "helper.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "better-assert": "^1.0.2",
+    "q": "^1.4.1",
+    "trim": "0.0.1"
+  }
+}
