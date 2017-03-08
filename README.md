@@ -16,7 +16,9 @@ const Helper = require('afrostream-node-sequelize-helper')
 const helper = new Helper(sequelize);
 
 // load a bunch of models
-helper.loadModelsFromDirectory(__dirname + '/models');
+const models = helper.loadModelsFromDirectory(__dirname + '/models');
+// or, access the models using
+helper.models;
 ```
 
 DSL model associations creator
@@ -49,7 +51,7 @@ const queryOptionsBuilder = helper.createQueryOptionsBuilder();
 queryOptionsBuilder.setRootModel(ModelFoobar);
 queryOptionsBuilder.setInitialQueryOptions({ where: { _id: 42 } });
 
-ModelFoobar.findAll(queryOptionsBuilder.getOptions()).then(...)
+ModelFoobar.findAll(queryOptionsBuilder.getQueryOptions()).then(...)
 ```
 
 creating filters
@@ -139,3 +141,5 @@ helper.queryBuilder.filterOptions(options, (options, root) => {
   return options;
 });
 ```
+
+# Internals

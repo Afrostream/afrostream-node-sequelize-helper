@@ -4,7 +4,8 @@
   "description": "",
   "main": "helper.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "./node_modules/.bin/eslint ."
   },
   "keywords": [],
   "author": "",
@@ -13,5 +14,8 @@
     "better-assert": "^1.0.2",
     "q": "^1.4.1",
     "trim": "0.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^3.17.1"
   }
 }

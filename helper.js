@@ -1,12 +1,9 @@
 const assert = require('better-assert');
 
-const Q = require('q');
-
-const trim = require('trim');
-
 const fs = require('fs');
 
-const AssociationParser = require('./associations.parser.js');
+const AssociationsParser = require('./AssociationsParser.js');
+const QueryOptionsBuilder = require('./QueryOptionsBuilder.js');
 
 class Helper {
   constructor(options) {
@@ -16,9 +13,12 @@ class Helper {
     const logger = options.logger || console;
     if (typeof logger.prefix === 'function') {
       this.logger = logger.prefix('SEQUELIZE-HELPER');
+    } else {
+      this.logger = logger;
     }
     this.sequelize = options.sequelize;
     this.models = { /*modelName: Model*/ };
+    this.associations = null;
   }
 
   //
@@ -36,23 +36,56 @@ class Helper {
     return this.models;
   }
 
+  getModels(regex) {
+    assert(regex instanceof RegExp);
+
+    return Object.keys(this.models)
+      .filter(modelName => modelName.match(regex))
+      .reduce((p, modelName) => {
+        p[modelName] = this.models[modelName];
+        return p;
+      }, {});
+  }
+
+  createQueryOptionsBuilder(options) {
+    options = Object.assign({helper:this}, options);
+    return new QueryOptionsBuilder(options);
+  }
+
+  createQueryOptionsFilter(options) {
+    return options; // FIXME
+  }
+
   /*
-   * @param associations string
-   *
-   * string format:
-   * modelA.as -> modelB key:val key:val ...
-   * modelA ->
+   * FIXME: documentation
+   * @return Map(Model, [ { model: Model, as: "..." } ])
    */
-  associateModels(associations, options) {
+  associateModels(associations) {
     assert(typeof associations === 'string');
     assert(associations);
 
-    const parser = new AssociationParser({
+    const parser = new AssociationsParser({
       sequelize: this.sequelize,
       models: this.models,
       logger: this.logger
     });
-    parser.parse(associations);
+    this.associations = parser.parse(associations);
+  }
+
+  generateOptionalAssociations() {
+    assert(this.associations instanceof Map);
+
+    const result = new Map();
+    for (const [modelName, associations] of this.associations) {
+      result.set(modelName, associations.map(association => {
+        return {
+          model: association.model,
+          as: association.as,
+          required: false
+        };
+      }));
+    }
+    return result;
   }
 }
 
