@@ -209,7 +209,9 @@ class AssociationsParser {
 
     associations.split("\n").forEach((line, i) => {
       const trimedLine = trim(line);
-      if (trimedLine.length === 0 || trimedLine[0] === '#') {
+      if (trimedLine.length === 0 ||
+          trimedLine[0] === '#' ||
+          trimedLine[0] === '`') { // markdown ;)
         // comment
         return;
       }
