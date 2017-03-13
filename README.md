@@ -74,6 +74,159 @@ get resulting queryOptions
 qb.getQueryOptions();
 ```
 
+## QueryBuilder auto-populating
+
+the querybuilder can parse a populate options query string
+
+the syntax is :
+
+```
+includedAssociation,includedAssociation.nestedIncludedAssociation,(...)
+```
+
+ex:
+
+```
+seasons,seasons.episodes
+```
+
+you can get it from a query string
+
+```
+?populate=seasons,seasons.episodes
+```
+
+the query builder will auto add sequelize included: [ { ... } ] models.
+
+### optional associations
+
+every models can have one or many optional associations
+
+
+```
+optionalAssociations.set(modelA, [
+  { model: modelB, ... },
+  { model: modelC, ... },
+  (...)
+])
+```
+
+when the query builder parse "populate" option, the query builder check
+if this is an optional associations. if true => the query builder will add
+the included model associated.
+
+example:
+
+```js
+// Serie.seasons[]    -> Season
+// Season.episodes[]  -> Episode
+const mandatoryAssociations = new Map();
+const optionalAssociations = new Map();
+
+optionalAssociations[Serie] = { model: Season, as: 'seasons', required: false };
+optionalAssociations[Season] = { model: Episode, as: 'episodes', required: false, foo: 'bar' };
+
+qb.setRootModel(Serie)
+  .populate("seasons", mandatoryAssociations, optionalAssociations)
+  .getQueryOptions();
+// will contain:
+// {
+//   (...),
+//   included: [ {
+//     model: Season,
+//     as: 'seasons',
+//     required: false
+// }
+
+qb.setRootModel(Serie)
+  .populate("seasons.episodes", mandatoryAssociations, optionalAssociations)
+  .getQueryOptions();
+// will contain:
+// {
+//   (...),
+//   included: [ {
+//     model: Season,
+//     as: 'seasons',
+//     required: false
+//     included: [ {
+//       model: Episode,
+//       as: 'episodes',
+//       required: false,
+//       foo: 'bar'
+//     } ]
+//   } ]
+// }
+```
+
+### mandatory associations
+
+every models can have one or many mandatory association
+
+```
+mandatoryAssociations.set(modelA, [
+  { model: modelB, ... },
+  { model: modelC, ... },
+  (...)
+])
+```
+
+as soon as the query builder finds modelA, the query builder will
+include the associations found in the mandatoryAssociations map.
+
+example:
+
+```js
+// working with models associations:
+// Serie.seasons[]    -> Season
+const mandatoryAssociations = new Map();
+const optionalAssociations = new Map(); // empty
+
+mandatoryAssociations[Serie] = { model: Season, as: 'seasons', required: true };
+
+qb.setRootModel(Serie)
+  .populate("", mandatoryAssociations, optionalAssociations)
+  .getQueryOptions();
+// will contain:
+// {
+//   (...),
+//   included: [ {
+//     model: Season,
+//     as: 'seasons',
+//     required: true
+// }
+```
+
+example
+
+```js
+// working with models associations:
+// Serie.seasons[]      -> Season
+// Season.episodes[]    -> Episode
+const mandatoryAssociations = new Map();
+const optionalAssociations = new Map();
+
+optionalAssociations[Serie] = { model: Season, as: 'seasons', required: true };
+mandatoryAssociations[Season] = { model: Episode, as: 'episode', required: false };
+
+qb.setRootModel(Serie)
+  .populate("seasons", mandatoryAssociations, optionalAssociations)
+  .getQueryOptions();
+  // will contain:
+  // {
+  //   (...),
+  //   included: [ {
+  //     model: Season,
+  //     as: 'seasons',
+  //     required: false
+  //     included: [ {
+  //       model: Episode,
+  //       as: 'episodes',
+  //       required: false
+  //     } ]
+  //   } ]
+  // }
+```
+
 ## QueryBuilder filters
 
 create filter with simple where condition
