@@ -1,5 +1,7 @@
 const assert = require('better-assert');
 
+const QueryOptionsFilter = require('./QueryOptionsFilter.js');
+
 class QueryOptionsBuilder {
   constructor(options) {
     assert(options);
@@ -28,11 +30,7 @@ class QueryOptionsBuilder {
     this.queryOptions = queryOptions;
     return this;
   }
-/*
-  addFilter(filter) {
-    return this;
-  }
-*/
+
   _dupIncludedModel(im) {
     return {
       model: im.model,
@@ -156,6 +154,13 @@ class QueryOptionsBuilder {
     // saving the result
     this.queryOptions.include = includes;
     //
+    return this;
+  }
+
+  filter(filter, context) {
+    assert(filter instanceof QueryOptionsFilter);
+
+    filter.run(this.rootModel, this.queryOptions, context);
     return this;
   }
 

@@ -46,27 +46,76 @@ helper.models;
 
 ## Query builder
 
-```js
-const queryOptionsBuilder = helper.createQueryOptionsBuilder();
-queryOptionsBuilder.setRootModel(ModelFoobar);
-queryOptionsBuilder.setInitialQueryOptions({ where: { _id: 42 } });
+create a query builder
 
-ModelFoobar.findAll(queryOptionsBuilder.getQueryOptions()).then(...)
+```js
+const qb = helper.createQueryOptionsBuilder();
 ```
 
-creating filters
+add root Model & initial query options
 
 ```js
-// considering the following query options :
-// {   <= root level
-//   where: { _id: 42 },
-//   include: [ { model: NestedModelA, as: 'A', required: false } ] <= branch model
-// }
-//
-// you can implement the following recursive filter working on every branch
-//  of the query option tree
-//
-const filterActive = helper.createFilter((model, queryOptions, root, options) => {
+qb.setRootModel(ModelFoobar)
+  .setInitialQueryOptions({ where: { _id: 42 } });
+```
+
+add filters
+
+```js
+qb.filter(filterActive, {req: req})
+  .filter(filterBet, {req: req})
+  .filter(filterBroadcaster, {req: req})
+  .filter(filterCountry, {req: req});
+```
+
+get resulting queryOptions
+
+```js
+qb.getQueryOptions();
+```
+
+## QueryBuilder filters
+
+create filter with simple where condition
+
+```js
+const filter = helper.createQueryOptionsFilter();
+
+filter.setVisitor(
+  function when(model, queryOptions, root, options) {
+    return model.attributes.active;
+  },
+  function where(model, queryOptions, root, options) {
+    return { active: true };
+  }
+);
+```
+
+create filter with multiple where conditions
+
+```js
+const filter = helper.createQueryOptionsFilter();
+
+filter.setVisitor(
+  function when(model, queryOptions, root, options) {
+    return model.attributes.countries;
+  },
+  function where(model, queryOptions, root, options) {
+    return [
+      {countries: {$eq: []}},
+      {countries: {$eq: null}},
+      {countries: {$contains: [options.req.country._id]}}
+    ];
+  }
+);
+```
+
+low level api (single function parameter)
+
+```js
+const filter = helper.createQueryOptionsFilter();
+
+filter.setVisitor((model, queryOptions, root, options) => {
   // model: current branch model
   // queryOptions: current branch options
   // root: are we at the root of the tree
@@ -79,67 +128,6 @@ const filterActive = helper.createFilter((model, queryOptions, root, options) =>
 
 using filter
 
-```
-queryOptionsBuilder.addFilter(filterActive, {req: req});
-```
-
-high level filter creators
-
 ```js
-const filterActive = helper.createFilterAND(
-  function condition(model, queryOptions, root, options) {
-    return model.attributes.active;
-  },
-  function where(model, queryOptions, root, options) {
-    return { active: true };
-  }
-);
+queryOptionsBuilder.filter(filterActive, {req: req});
 ```
-
-```js
-const filterActive = helper.createFilterOR(
-  function condition(model, queryOptions, root, options) {
-    return options.req && model.attributes.broadcasters;
-  },
-  function where(model, queryOptions, root, options) {
-    return [
-      {broadcasters: {$eq: []}},
-      {broadcasters: {$eq: null}},
-      {broadcasters: {$contains: [options.req.broadcaster._id]}}
-    ];
-  }
-);
-```
-
-## CRUD Router
-
-```
-const Helper = require('afrostream-node-sequelize-helper')
-
-router.use('/elementFilms', Helper.routerCRUD({Model: sqldb.ElementFilm}));
-```
-
-# low level api
-
-generic filterOptions
-
-```js
-helper.queryBuilder.filterOptions(options, (options, root) => { ... })
-```
-
-example
-
-```js
-helper.queryBuilder.filterOptions(options, (options, root) => {
-  const model = root ? MyModel : options.model;
-
-  if (model &&
-      model.attributes &&
-      model.attributes.active) {
-    options = _.merge(options, {where: {active: true}});
-  }
-  return options;
-});
-```
-
-# Internals

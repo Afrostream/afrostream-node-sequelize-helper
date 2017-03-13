@@ -4,6 +4,7 @@ const fs = require('fs');
 
 const AssociationsParser = require('./AssociationsParser.js');
 const QueryOptionsBuilder = require('./QueryOptionsBuilder.js');
+const QueryOptionsFilter = require('./QueryOptionsFilter.js');
 
 class Helper {
   constructor(options) {
@@ -53,7 +54,8 @@ class Helper {
   }
 
   createQueryOptionsFilter(options) {
-    return options; // FIXME
+    options = Object.assign({helper:this}, options);
+    return new QueryOptionsFilter(options);
   }
 
   /*
